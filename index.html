@@ -23,7 +23,8 @@
       font-weight: bold;
     }
     input[type="text"],
-    input[type="number"] {
+    input[type="number"],
+    select {
       width: 100%;
       padding: 8px;
       margin-top: 5px;
@@ -60,6 +61,14 @@
   <h2 style="text-align:center;">Ledger Entry Form</h2>
 
   <form id="ledgerForm">
+    <label for="person">Select Person:</label>
+    <select id="person" name="person" required>
+      <option value="">-- Choose a name --</option>
+      <option value="somesh">Somesh</option>
+      <option value="shourya">Shourya</option>
+      <option value="vaibhav">Vaibhav</option>
+    </select>
+
     <label for="description">Description:</label>
     <input type="text" id="description" name="description" required />
 
@@ -76,23 +85,34 @@
   </form>
 
   <script>
+    const scriptURLs = {
+      somesh: "https://script.google.com/macros/s/AKfycbyiozLO5eZWQlxA37gH_QO-uZYI5wg4YlpHudxp2-7ZY4DrkLImFhCVyoZ2ArN0fTNi2Q/exec",
+      shourya: "https://script.google.com/macros/s/AKfycbwVHitLl33D1_nhGLS16iG8naCpe2q8M_3GgnoT2F2Xdz75g8-P4LBKQo29Dx7aWfuB/exec",
+      vaibhav: "https://script.google.com/macros/s/AKfycbyuSRnq4-hCiPXEI-YeaqacMwBzKvaVCSVcI8UrRbxKW-gBvvD7q9BpgpSJORPr2g2TOw/exec"
+    };
+
     document.getElementById("ledgerForm").addEventListener("submit", function (e) {
       e.preventDefault();
 
+      const person = document.getElementById("person").value;
       const description = document.getElementById("description").value.trim();
       const amount = document.getElementById("amount").value.trim();
       const typeInput = document.querySelector('input[name="type"]:checked');
-      if (!typeInput) {
-        alert("Please select transaction type.");
+
+      if (!person || !typeInput) {
+        alert("Please fill out all fields.");
         return;
       }
+
       const type = typeInput.value;
+      const scriptURL = scriptURLs[person];
 
-      const data = { description, amount, type };
+      if (!scriptURL) {
+        alert("Invalid person selected.");
+        return;
+      }
 
-      const url = new URL("https://script.google.com/macros/s/AKfycbyiozLO5eZWQlxA37gH_QO-uZYI5wg4YlpHudxp2-7ZY4DrkLImFhCVyoZ2ArN0fTNi2Q/exec"); // Replace this
-
-      // Using GET for easy CORS compliance
+      const url = new URL(scriptURL);
       url.searchParams.append("description", description);
       url.searchParams.append("amount", amount);
       url.searchParams.append("type", type);
@@ -101,7 +121,7 @@
         .then((res) => res.json())
         .then((response) => {
           if (response.result === "success") {
-            alert("Entry added! Current balance: ₹" + response.balance.toFixed(2));
+            alert("Entry added for " + person + "! Current balance: ₹" + response.balance.toFixed(2));
             document.getElementById("ledgerForm").reset();
           } else {
             alert("Failed to add entry.");
@@ -109,7 +129,7 @@
         })
         .catch((err) => {
           console.error("Error:", err);
-          alert("Something went wrong. Check console for details.");
+          alert("Something went wrong. See console.");
         });
     });
   </script>
